@@ -5,8 +5,444 @@
   </head>
 
   <body>
-    <h1>STRONA INTERNETOWA</h1>
+
+
+    <h1>Rejestracja</h1>
+    <input id="register_login" placeholder="Login" /><br />
+    <input id="register_password" placeholder="Hasło" /><br />
+    <input id="register_submit" type="submit" value="Rejestruj" onclick="register_handler()"/><br />
+    <span id="register_response"></span>
+
+
+    <h1>Logowanie</h1>
+    <input id="login_login" placeholder="Login" /><br />
+    <input id="login_password" placeholder="Hasło" type="password" /><br />
+    <input id="login_submit" type="submit" value="Zaloguj" onclick="login_handler()"/><br />
+    <span id="login_response"></span>
+
+
+    <h1>Wylogowanie</h1>
+    <input id="logout_submit" type="submit" value="Wyloguj" onclick="logout_handler()"/><br />
+    <span id="logout_response"></span>
+
+
+    <h1>Kim jestem</h1>
+    <input id="whoami_submit" type="submit" value="Kim jestem?" onclick="whoami_handler()"/><br />
+    <span id="whoami_response"></span>
+
+
+    <h1>Użytkownicy</h1>
+    <input id="users_submit" type="submit" value="Pokaż użytkowników" onclick="users_handler()"/><br />
+    <div id="users_response"></div>
+
+
+    <h1>Wątki</h1>
+    <span>Nowy wątek: </span>
+    <input id="newthread_input" placeholder="Tytuł"/>
+    <input id="newthread_submit" type="submit" value="Opublikuj" onclick="newthread_handler()"/><br />
+    <input id="threads_submit" type="submit" value="Pokaż wątki" onclick="threads_handler()"/><br />
+    <div id="threads_response"></div>
+
+
   </body>
+
+
+  <script>
+
+
+    /*
+    Funkcja po naciśnięciu przycisku rejestracji
+
+    Wyciąga z inputów dane i wysyła je do serwera
+
+    Wypisuje kod HTTP z serwera w spanie
+
+    */
+    const register_handler = async () => {
+      const login = document.getElementById("register_login");
+      const password = document.getElementById("register_password");
+      const response = document.getElementById("register_response");
+
+      const reqData = {
+        login: login.value,
+        password: password.value
+      }
+
+      const url = document.location+"api/auth/register";
+
+      const res = await fetch(url, {
+        method: "POST",
+        headers: {"Content-Type": "application/json"},
+        body: JSON.stringify(reqData)
+
+      });
+
+      response.innerText = await res.status;
+
+    }
+
+
+    /*
+    Funkcja po naciśnięciu przycisku logowania
+
+    Wyciąga z inputów dane i wysyła je do serwera
+
+    Wypisuje kod HTTP z serwera w spanie
+
+    */
+
+
+    const login_handler = async () => {
+      const login = document.getElementById("login_login");
+      const password = document.getElementById("login_password");
+      const response = document.getElementById("login_response");
+
+      const reqData = {
+        login: login.value,
+        password: password.value
+      }
+
+      const url = document.location+"api/auth/login";
+
+
+      const res = await fetch(url, {
+        method: "POST",
+        headers: {"Content-Type": "application/json"},
+        body: JSON.stringify(reqData)
+
+      });
+
+      response.innerText = await res.status;
+    }
+
+    /*
+    Funkcja po naciśnięciu przycisku wylogowania
+
+    Wysyła żądanie na serwer
+
+    Wypisuje kod HTTP z serwera w spanie
+
+    */
+
+
+    const logout_handler = async () => {
+      const response = document.getElementById("logout_response");
+
+      const url = document.location+"api/auth/logout";
+
+      const res = await fetch(url, {
+        method: "POST"
+      });
+
+      response.innerText = await res.status;
+    }
+
+    /*
+      Funkcja po kliknięcu w przycisk "kim jestem?"
+
+      Wysyła żądanie na serwer i wypisuje w spanie surowy json danych o użytkowniku (lub ich braku)
+
+    */
+
+    const whoami_handler = async () => {
+      const response = document.getElementById("whoami_response");
+
+      const url = document.location+"api/auth/whoami";
+
+      const res = await fetch(url, {
+        headers: {"Content-Type": "application/json"}
+      });
+      if(await res.status == 200)
+        response.innerText = JSON.stringify(await res.json());
+      else
+        response.innerText = "Nie zalogowany";
+    }
+
+    /*
+      Po kliknięciu w Pokaż użytkowników
+
+      Jeśli jest uprawniony
+
+      Pobiera z serwera listę użytkowników oraz listę ról
+
+
+      Dla każdego użytkownika tworzy div w którym wypisuje jego nazwę
+      Dodaje dla niego przycisk banowania-odbanowania
+      Dodaje dla niego select który umożliwia zmianę roli
+
+
+      Nieuprawniony użytkownik nie może skorzystać z tego endpointu
+
+
+    */
+
+
+
+
+        const users_handler = async () => {
+          const response = document.getElementById("users_response");
+          response.innerHTML="";
+
+          let url = document.location+"api/roles";
+
+          let res = await fetch(url, {
+            headers: {"Content-Type": "application/json"}
+          });
+          if(await res.status != 200){
+              response.innerHTML = "Nie uprawniony";
+              return;
+          }
+
+          const roles = (await res.json());
+
+           url = document.location+"api/users";
+
+           res = await fetch(url, {
+            headers: {"Content-Type": "application/json"}
+          });
+
+
+          if(await res.status != 200){
+              response.innerHTML = "Nie uprawniony";
+              return;
+          }
+          for(const user of await res.json()){
+              const userDiv = document.createElement("div");
+              const userinfo =  document.createElement("span");
+              const ban = document.createElement("button");
+              const roleSelect = document.createElement("select");
+
+              userinfo.innerText = user.username;
+
+              ban.innerText = user.banned?"Unban":"Ban";
+              ban.onclick = () => ban_handler(user.username, ban);
+
+              for(const role of roles){
+                const op = document.createElement("option");
+                op.value = role;
+                op.innerText = role;
+                if(user.rolename == role)
+                  op.selected = "selected";
+                roleSelect.append(op);
+
+              }
+
+
+              roleSelect.onchange = () => role_handler(user.username, roleSelect);
+
+              userDiv.append(userinfo)
+              userDiv.append(ban)
+              userDiv.append(roleSelect)
+
+              response.append(userDiv);
+          }
+
+        }
+
+/*
+  Po kliknięciu w przycisk banowania odbanowania konkretnego użytkownika
+
+  Wysyła żądanie banowania lub odbanowania użytkownika
+
+
+*/
+
+        const ban_handler = async (name, button) => {
+
+          const url = document.location+"api/users/ban";
+
+          const res = await fetch(url, {
+            method: "POST",
+            headers: {"Content-Type": "application/json"},
+            body: JSON.stringify({username:name, state:button.innerText=="Ban"?true:false})
+          });
+          button.innerText=button.innerText=="Ban"?"Unban":"Ban"
+
+        }
+
+
+        /*
+          Po wybraniu roli w selecie przy użytkowniku
+
+          Wysyła żądanie zmiany roli użytkownika
+
+
+        */
+
+        const role_handler = async (name, select) => {
+
+          const url = document.location+"api/users/role";
+
+          const res = await fetch(url, {
+            method: "POST",
+            headers: {"Content-Type": "application/json"},
+            body: JSON.stringify({username:name, rolename:select.selectedOptions[0].value})
+          });
+
+        }
+
+
+
+/*
+  Po kliknięcuiu w opublikuj - tworzenie nowego wątku
+
+  Wysyła na serwer żądanie z nazwą nowego wątku
+
+*/
+
+    const newthread_handler = async () => {
+      const title = document.getElementById("newthread_input");
+
+
+      const url = document.location+"api/content/threads/new";
+
+
+      const res = await fetch(url, {
+        method: "POST",
+        headers: {"Content-Type": "application/json"},
+        body: JSON.stringify({title: title.value})
+
+      });
+
+    }
+
+
+    /*
+      Po kliknięciu pokaż Wątki
+
+      Pobiera listę wątków z serwera
+      Dla każdego z nich tworzy div w którym są informacje oraz przycisk wyświetlenia wiadomości
+
+
+    */
+
+    const threads_handler = async () => {
+      const response = document.getElementById("threads_response");
+      response.innerHTML="";
+
+      let url = document.location+"api/content/threads";
+
+      let res = await fetch(url, {
+        headers: {"Content-Type": "application/json"}
+      });
+      if(await res.status != 200){
+          response.innerHTML = "Nie uprawniony";
+          return;
+      }
+
+      for(const thread of await res.json()){
+          const threadDiv = document.createElement("div");
+          const threadinfo =  document.createElement("span");
+          const showButton = document.createElement("button");
+          const messagesDiv = document.createElement("div");
+
+
+          showButton.innerText="Pokaż wątek";
+          showButton.onclick = () => thread_handler(thread.name, messagesDiv);
+
+          threadinfo.innerText = thread.name+" by "+thread.author+" on "+thread.created_on;
+
+          threadDiv.append(threadinfo)
+          threadDiv.append(showButton)
+          threadDiv.append(messagesDiv)
+
+          response.append(threadDiv);
+      }
+
+    }
+
+
+
+
+
+/*
+  Po kliknięciu pokaż wątek
+
+  Pobiera listę wiadomości tego wątku z serwera
+  Dla każdego z nich tworzy div w którym są informacje oraz przycisk wyświetlenia wiadomości
+
+
+*/
+
+
+    const thread_handler = async (name, div) => {
+      const response = div;
+      response.innerHTML="";
+
+      let url = document.location+"api/content/messages";
+
+      let res = await fetch(url, {
+        method: "POST",
+        headers: {"Content-Type": "application/json"},
+        body: JSON.stringify({threadname: name})
+
+      });
+      if(await res.status != 200){
+          response.innerHTML = "Nie uprawniony";
+          return;
+      }
+
+      for(const message of await res.json()){
+          const messageDiv = document.createElement("div");
+          const messageinfo =  document.createElement("span");
+          const messageText = document.createElement("div");
+
+
+
+
+          messageinfo.innerText = "Message by "+message.author+" on "+message.created_on;
+          messageText.innerText = message.content;
+
+          messageDiv.append(messageinfo)
+          messageDiv.append(messageText)
+
+
+          response.append(messageDiv);
+      }
+
+      const newmessageInfo = document.createElement("span");
+      const newmessageInput = document.createElement("textarea");
+      const newmessageSubmit = document.createElement("button");
+
+      newmessageSubmit.innerText = "Wyślij";
+      newmessageSubmit.onclick = () => newmessage_handler(name, newmessageInput);
+      newmessageInfo.innerText = "Nowa wiadomość: ";
+
+      response.append(newmessageInfo)
+      response.append(newmessageInput)
+      response.append(newmessageSubmit)
+
+    }
+
+
+/*
+  Po kliknięciu w wyślij
+  Wysyła na serwer nową wiadomość oraz wątek do którego ma należeć
+
+*/
+
+
+    const newmessage_handler = async (thread, input) => {
+      const text = input.value;
+
+
+      const url = document.location+"api/content/messages/new";
+
+
+      const res = await fetch(url, {
+        method: "POST",
+        headers: {"Content-Type": "application/json"},
+        body: JSON.stringify({threadname: thread, content: text})
+
+      });
+
+    }
+
+
+
+
+
+  </script>
 
 
 
