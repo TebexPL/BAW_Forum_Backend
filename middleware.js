@@ -4,10 +4,6 @@ import crypto from 'node:crypto';
 import {client} from './index.js'
 
 
-
-/*
-  Generuje id którego jeszcze nie ma w bazie - unikatowe
-*/
 const getUniqueSid = async () => {
   let sid;
   do{
@@ -22,28 +18,6 @@ const getUniqueSid = async () => {
 }
 
 
-/*
-  Przed każdą obsługą jakiegokolwiek endpointu
-
-
-  Jeśli użytkownik (nieważne czy zalogowany czy nie) nie posiada cookie z ID
-    To jest mu przypisywane ID/sesja w cookie i w bazie
-
-  Jeśli sesja istnieje ale wygasła lub jest z nią problem
-    Jest tworzona sesja od nowa
-
-  Jeśli sesja jest już OK, dane z nią związane są przekazywamne do kolejnego etapu
-
-
-
-
-  Do sesji przypisany jest zalogowany użytkownik, lub null.
-  Kolejnych warstw nie interesuje już zarządzanie sesją, ciasteczkami itp
-
-
-
-
-*/
 export const cookieManagement = async (req, res, next) => {
     try{
       if(!req.cookies['sid'])
@@ -101,10 +75,6 @@ export const cookieManagement = async (req, res, next) => {
 
 
 
-/*
- Kolejny, opcjonalny middleware który odrzuca niezalogowanych użytkowników
-
-*/
 
 export const isLoggedIn = async (req, res, next) => {
   if(req.sessionData.userid == null)
@@ -113,13 +83,6 @@ export const isLoggedIn = async (req, res, next) => {
     next();
 }
 
-/*
-Middleware sprawdzający czy użytkownik może kontrolować innych użytkowników (banować itp)
-
-Odrzuca połączenie od nieautoryzowanych użytkowników
-
-
-*/
 
 export const hasUserControl = async (req, res, next) => {
   try{
@@ -148,11 +111,6 @@ export const hasUserControl = async (req, res, next) => {
 }
 
 
-/*
-Middleware sprawdzający czy użytkownik może kontrolować treści - usuwać itp
-
-Odrzuca połączenie od nieautoryzowanych użytkowników
-*/
 export const hasContentControl = async (req, res, next) => {
   try{
     const dbResponse = await client.query(`

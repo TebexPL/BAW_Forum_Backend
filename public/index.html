@@ -334,16 +334,21 @@
           const threadDiv = document.createElement("div");
           const threadinfo =  document.createElement("span");
           const showButton = document.createElement("button");
+          const deleteButton = document.createElement("button");
           const messagesDiv = document.createElement("div");
 
 
           showButton.innerText="Pokaż wątek";
-          showButton.onclick = () => thread_handler(thread.name, messagesDiv);
+          showButton.onclick = () => thread_handler(thread.id, messagesDiv);
+
+          deleteButton.innerText="Usuń wątek";
+          deleteButton.onclick = () => thread_delete(thread.id);
 
           threadinfo.innerText = thread.name+" by "+thread.author+" on "+thread.created_on;
 
           threadDiv.append(threadinfo)
           threadDiv.append(showButton)
+          threadDiv.append(deleteButton)
           threadDiv.append(messagesDiv)
 
           response.append(threadDiv);
@@ -365,18 +370,13 @@
 */
 
 
-    const thread_handler = async (name, div) => {
+    const thread_handler = async (id, div) => {
       const response = div;
       response.innerHTML="";
 
-      let url = document.location+"api/content/messages";
+      let url = document.location+"api/content/messages/"+id;
 
-      let res = await fetch(url, {
-        method: "POST",
-        headers: {"Content-Type": "application/json"},
-        body: JSON.stringify({threadname: name})
-
-      });
+      let res = await fetch(url);
       if(await res.status != 200){
           response.innerHTML = "Nie uprawniony";
           return;
@@ -386,13 +386,16 @@
           const messageDiv = document.createElement("div");
           const messageinfo =  document.createElement("span");
           const messageText = document.createElement("div");
+          const messageDelete = document.createElement("button");
 
 
-
+          messageDelete.innerText="Usuń wiadomość";
+          messageDelete.onclick = () => message_delete(message.id);
 
           messageinfo.innerText = "Message by "+message.author+" on "+message.created_on;
           messageText.innerText = message.content;
 
+          messageinfo.append(messageDelete)
           messageDiv.append(messageinfo)
           messageDiv.append(messageText)
 
@@ -405,7 +408,7 @@
       const newmessageSubmit = document.createElement("button");
 
       newmessageSubmit.innerText = "Wyślij";
-      newmessageSubmit.onclick = () => newmessage_handler(name, newmessageInput);
+      newmessageSubmit.onclick = () => newmessage_handler(id, newmessageInput);
       newmessageInfo.innerText = "Nowa wiadomość: ";
 
       response.append(newmessageInfo)
@@ -432,14 +435,42 @@
       const res = await fetch(url, {
         method: "POST",
         headers: {"Content-Type": "application/json"},
-        body: JSON.stringify({threadname: thread, content: text})
+        body: JSON.stringify({threadid: thread, content: text})
 
       });
 
     }
 
 
+    const thread_delete = async (id, input) => {
 
+
+      const url = document.location+"api/content/threads/delete";
+
+
+      const res = await fetch(url, {
+        method: "POST",
+        headers: {"Content-Type": "application/json"},
+        body: JSON.stringify({threadid: id})
+
+      });
+
+    }
+
+    const message_delete = async (id, input) => {
+
+
+      const url = document.location+"api/content/messages/delete";
+
+
+      const res = await fetch(url, {
+        method: "POST",
+        headers: {"Content-Type": "application/json"},
+        body: JSON.stringify({messageid: id})
+
+      });
+
+    }
 
 
   </script>
