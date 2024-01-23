@@ -44,7 +44,7 @@ export const cookieManagement = async (req, res, next) => {
       WHERE id=$2
 
       `, [newExpiry.toUTCString(), idHash]);
-      res.cookie("sid", id, { expires: newExpiry, httpOnly: true, sameSite: 'strict' });
+      res.cookie("sid", id, { expires: newExpiry, httpOnly: true, sameSite: 'none'/*!!!!*/ });
 
       req.sessionData = sessionData;
     }
@@ -59,7 +59,7 @@ export const cookieManagement = async (req, res, next) => {
         VALUES($1, null, $2::timestamp)
 
         `, [idHash, expiry.toUTCString()]);
-        res.cookie("sid", id, { expires: expiry, httpOnly: true, sameSite: 'strict' });
+        res.cookie("sid", id, { expires: expiry, httpOnly: true, sameSite: 'none'/*!!!!*/ });
         const sessionData = {id: idHash, userid: null, expires: expiry};
         req.sessionData = sessionData;
       }
@@ -70,6 +70,10 @@ export const cookieManagement = async (req, res, next) => {
       }
     }
 
+	/*!!!*/
+  res.set('Access-Control-Allow-Credentials', ['true']);
+  res.set('Access-Control-Allow-Origin', ['http://localhost:3000']);
+  res.set('Access-Control-Allow-Headers', ['content-type']);
   next();
 }
 
