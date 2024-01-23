@@ -37,15 +37,27 @@ export const content = (app) => {
 
   app.post('/api/content/threads/new', isLoggedIn, async (req, res, next) => {
     try{
-      if(!req.body.title || typeof(req.body.title) != 'string')
+      if(!req.body.title || typeof(req.body.title) != 'string' || !req.body.content || typeof(req.body.content) != 'string')
         throw "Invalid body while creating new thread";
 
+
+	
       await client.query(`
 
       INSERT INTO threads(title, authorid)
       VALUES($1, $2)
 
       `,[req.body.title, req.sessionData.userid]);
+      res.status(200).send();
+
+
+
+      await client.query(`
+
+      INSERT INTO messages(content, authorid, threadid)
+      VALUES($1, $2, (SELECT id FROM threads WHERE title=$3))
+
+      `,[req.body.content, req.sessionData.userid, req.body.title]);
       res.status(200).send();
 
     }

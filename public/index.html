@@ -39,6 +39,7 @@
     <h1>Wątki</h1>
     <span>Nowy wątek: </span>
     <input id="newthread_input" placeholder="Tytuł"/>
+    <input id="newthread_content" placeholder="Zawartość"/>
     <input id="newthread_submit" type="submit" value="Opublikuj" onclick="newthread_handler()"/><br />
     <input id="threads_submit" type="submit" value="Pokaż wątki" onclick="threads_handler()"/><br />
     <div id="threads_response"></div>
@@ -292,6 +293,7 @@
 
     const newthread_handler = async () => {
       const title = document.getElementById("newthread_input");
+      const content = document.getElementById("newthread_content");
 
 
       const url = document.location+"api/content/threads/new";
@@ -300,7 +302,7 @@
       const res = await fetch(url, {
         method: "POST",
         headers: {"Content-Type": "application/json"},
-        body: JSON.stringify({title: title.value})
+        body: JSON.stringify({title: title.value, content: content.value})
 
       });
 
