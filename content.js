@@ -80,10 +80,27 @@ export const content = (app) => {
 
       `, [req.body.threadid])
 
-      if(dbResponse.rowCount<1)
-        throw "Thread not found"
-      if(dbResponse.rows[0].authorid != req.sessionData.userid)
-        throw "Delete not triggered by author"
+      const dbResponseUser = await client.query(`
+
+      SELECT
+        users.name as username,
+        users.banned,
+        roles.name as rolename,
+        users.since
+      FROM roles
+      JOIN users on users.roleid=roles.id
+      WHERE users.id=$1
+
+      `, [req.sessionData.userid])
+
+
+      if(dbResponse.rowCount<1 || dbResponseUser.rowCount<1)
+        throw "Thread not found/User not found"
+      if(dbResponse.rows[0].authorid != req.sessionData.userid && 
+		dbResponseUser.rows[0].rolename != 'Admin' &&
+		dbResponseUser.rows[0].rolename != 'Content Moderator')
+        throw "Delete not triggered by author, admin or moderator"
+
 
       await client.query(`
 
@@ -174,10 +191,26 @@ export const content = (app) => {
 
       `, [req.body.messageid])
 
-      if(dbResponse.rowCount<1)
-        throw "Messgae not found"
-      if(dbResponse.rows[0].authorid != req.sessionData.userid)
-        throw "Delete not triggered by author"
+	 const dbResponseUser = await client.query(`
+
+      SELECT
+        users.name as username,
+        users.banned,
+        roles.name as rolename,
+        users.since
+      FROM roles
+      JOIN users on users.roleid=roles.id
+      WHERE users.id=$1
+
+      `, [req.sessionData.userid])
+
+
+      if(dbResponse.rowCount<1 || dbResponseUser.rowCount<1)
+        throw "Thread not found/User not found"
+      if(dbResponse.rows[0].authorid != req.sessionData.userid && 
+		dbResponseUser.rows[0].rolename != 'Admin' &&
+		dbResponseUser.rows[0].rolename != 'Content Moderator')
+        throw "Delete not triggered by author, admin or moderator"
 
       await client.query(`
 
